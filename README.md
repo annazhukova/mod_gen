@@ -1,25 +1,20 @@
-# mod_gen
-====================
-Model Generalization
-====================
+# mod_gen: Knowledge-based generalization for metabolic models
 
 **Model Generalization** is a Python library that compresses a metabolic network model
 using the knowledge-based model generalization method.
 
 **Model generalization** takes a model in [SBML format](http://sbml.org/) as input, and produces 2 SBML files as an output:
-  * SBML containing the generalized model
-  * SBML file with [groups extension](http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>)
+* SBML containing the generalized model
+* SBML file with [groups extension](http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>)
 containing the initial model plus the groups representing similar metabolites and similar reactions.
 
-Article
-=======
+## Article
 
 **Model Generalization** is described in `Zhukova A, Sherman DJ. Knowledge-based generalization of metabolic models.
 J Comput Biol. 2014 Jul;21(7):534-47 [doi:10.1089/cmb.2013.0143](http://identifiers.org/doi/10.1089/cmb.2013.0143).
 
 
-Model Generalization Method
-===========================
+## Model Generalization Method
 
 The **model generalization method** groups similar metabolites and reactions in the network
 based on its structure and the knowledge, extracted from [the ChEBI ontology](http://www.ebi.ac.uk/chebi/).
@@ -35,41 +30,39 @@ the same generalized products, are considered equivalent and are factored togeth
 
 The appropriate level of abstraction for metabolites and reactions is defined by the network itself as
 the most general one that satisfies two restrictions:
-  (1) Stoichiometry preserving restriction: metabolites that participate in the same reaction cannot be grouped together;
-  (2) Metabolite diversity restriction: metabolites that do not participate in any pair of similar reactions are not
+1. *Stoichiometry preserving restriction:* metabolites that participate in the same reaction cannot be grouped together;
+2. *Metabolite diversity restriction:* metabolites that do not participate in any pair of similar reactions are not
   grouped together (as there is no evidence of their similarity in the network).
 
 Overall, the generalization method is composed of three modules:
-  (1) Aggressive reaction grouping based on the most general metabolite grouping (defined by ChEBI),
+1. Aggressive reaction grouping based on the most general metabolite grouping (defined by ChEBI),
 in order to generate reaction grouping candidates;
-  (2) Ungrouping of some metabolites and reactions to correct for violation of the stoichiometry preserving restriction;
-  (3) Ungrouping of some metabolites (while keeping the reaction grouping intact) to correct for violation of
+2. Ungrouping of some metabolites and reactions to correct for violation of the stoichiometry preserving restriction;
+3. Ungrouping of some metabolites (while keeping the reaction grouping intact) to correct for violation of
 the metabolite diversity restriction.
 
-For instance, (S)-3-hydroxydecanoyl-CoA, (S)-3-hydroxylauroyl-CoA and (S)-3-hydroxytetradecanoyl-CoA
-have a common ancestor hydroxy fatty acyl-CoA in ChEBI. They can be grouped and generalized into hydroxy fatty acyl-CoA,
+For instance, *(S)-3-hydroxydecanoyl-CoA*, *(S)-3-hydroxylauroyl-CoA* and *(S)-3-hydroxytetradecanoyl-CoA*
+have a common ancestor *hydroxy fatty acyl-CoA* in ChEBI. They can be grouped and generalized into *hydroxy fatty acyl-CoA*,
 if in the network there is no reaction whose stoichiometry would be changed by such a generalization
 (stoichiometry preserving restriction), and exist similar reactions that consume or produce them
 (metabolite diversity restriction).
 
 
-Installing Model Generalization
-===============================
+## Installation
 
 From the directory where you have extracted this archive, execute:
-  * python setup.py
+* python setup.py
 
 
-Running Model Generalization
-============================
+## Running Model Generalization
 
 Execute:
-  * python ./main.py --model path_to_your_model.xml --verbose
+* python ./main.py --model path_to_your_model.xml --verbose
 
 For example:
-  * python ./main.py --model ./MODEL1111190000.xml --verbose
+* python ./main.py --model ./MODEL1111190000.xml --verbose
 
 The script will produce two SBML files, containing the generalized model:
-  * path_to_your_model_generalized.xml -- SBML containing the generalized model
-  * path_to_your_model_with_groups.xml -- SBML file with groups extension containing the initial model
+* path_to_your_model_generalized.xml -- SBML containing the generalized model
+* path_to_your_model_with_groups.xml -- SBML file with groups extension containing the initial model
   plus the groups representing similar metabolites and similar reactions.

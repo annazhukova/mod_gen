@@ -10,14 +10,14 @@ if version < '2.2.3':
     DistributionMetadata.download_url = None
 
 
-setup(name='SBMLModelGeneralization',
-      description='SBML model generalization utilities.',
-      long_description=open('README.txt').read(),
+setup(name='SBML Model Generalization',
+      description='Knowledge-based generalization for metabolic models in SBML format.',
+      long_description=open('README.md').read(),
       author='Anna Zhukova',
       author_email='zhutchok@gmail.com',
-      url='http://metamogen.gforge.inria.fr',
+      url='https://github.com/annazhukova/mod_gen',
       version='1.0',
-      packages=find_packages(exclude=['sbml_generalization/runner/', 'sbml_generalization/runner/path2models']),
+      packages=find_packages(exclude=['sbml_generalization/runner/']),
       include_package_data=True,
       platform=['MacOS', 'Linux', 'Windows'],
       classifiers=[
@@ -28,6 +28,6 @@ setup(name='SBMLModelGeneralization',
           'Topic :: Scientific/Engineering :: Bio-Informatics',
           'Topic :: Software Development :: Libraries :: Python Modules',
       ],
-      download_url='http://metamogen.gforge.inria.fr',
+      download_url='https://github.com/annazhukova/mod_gen',
       requires=['python-libsbml-experimental', 'mod_sbml']
-)
+      )
