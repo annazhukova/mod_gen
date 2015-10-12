@@ -6,23 +6,23 @@ Model Generalization
 **Model Generalization** is a Python library that compresses a metabolic network model
 using the knowledge-based model generalization method.
 
-**Model generalization** takes a model in `SBML format <http://sbml.org/>`_ as input, and produces 2 SBML files as an output:
+**Model generalization** takes a model in [SBML format](http://sbml.org/) as input, and produces 2 SBML files as an output:
   * SBML containing the generalized model
-  * SBML file with `groups extension <http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>`_
+  * SBML file with [groups extension](http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>)
 containing the initial model plus the groups representing similar metabolites and similar reactions.
 
 Article
 =======
 
 **Model Generalization** is described in `Zhukova A, Sherman DJ. Knowledge-based generalization of metabolic models.
-J Comput Biol. 2014 Jul;21(7):534-47 <http://identifiers.org/doi/10.1089/cmb.2013.0143>`_.
+J Comput Biol. 2014 Jul;21(7):534-47 [doi:10.1089/cmb.2013.0143](http://identifiers.org/doi/10.1089/cmb.2013.0143).
 
 
 Model Generalization Method
 ===========================
 
 The **model generalization method** groups similar metabolites and reactions in the network
-based on its structure and the knowledge, extracted from the `ChEBI ontology <http://www.ebi.ac.uk/chebi/>`_.
+based on its structure and the knowledge, extracted from [the ChEBI ontology](http://www.ebi.ac.uk/chebi/).
 The reactions between the same generalized species are factored together into generalized reactions.
 A generalization is made specifically for a given model and is maximal with respect to the relations in the model;
 it respects semantic constraints such as reaction stoichiometry, connectivity, and transport between compartments;
