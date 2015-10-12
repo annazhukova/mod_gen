@@ -5,13 +5,13 @@ using the knowledge-based model generalization method.
 
 **Model generalization** takes a model in [SBML format](http://sbml.org/) as input, and produces 2 SBML files as an output:
 * SBML containing the generalized model
-* SBML file with [groups extension](http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups>)
+* SBML file with [groups extension](http://sbml.org/Documents/Specifications/SBML_Level_3/Packages/groups)
 containing the initial model plus the groups representing similar metabolites and similar reactions.
 
 ## Article
 
-**Model Generalization** is described in `Zhukova A, Sherman DJ. Knowledge-based generalization of metabolic models.
-J Comput Biol. 2014 Jul;21(7):534-47 [doi:10.1089/cmb.2013.0143](http://identifiers.org/doi/10.1089/cmb.2013.0143).
+Zhukova A, Sherman DJ. **Knowledge-based generalization of metabolic models.**
+*J Comput Biol.* 2014 Jul; **21**(7):534-47 [doi:10.1089/cmb.2013.0143](http://identifiers.org/doi/10.1089/cmb.2013.0143).
 
 
 ## Model Generalization Method
@@ -30,14 +30,19 @@ the same generalized products, are considered equivalent and are factored togeth
 
 The appropriate level of abstraction for metabolites and reactions is defined by the network itself as
 the most general one that satisfies two restrictions:
+
 1. *Stoichiometry preserving restriction:* metabolites that participate in the same reaction cannot be grouped together;
+
 2. *Metabolite diversity restriction:* metabolites that do not participate in any pair of similar reactions are not
   grouped together (as there is no evidence of their similarity in the network).
 
 Overall, the generalization method is composed of three modules:
+
 1. Aggressive reaction grouping based on the most general metabolite grouping (defined by ChEBI),
 in order to generate reaction grouping candidates;
+
 2. Ungrouping of some metabolites and reactions to correct for violation of the stoichiometry preserving restriction;
+
 3. Ungrouping of some metabolites (while keeping the reaction grouping intact) to correct for violation of
 the metabolite diversity restriction.
 
@@ -57,12 +62,15 @@ From the directory where you have extracted this archive, execute:
 ## Running Model Generalization
 
 Execute:
-* python ./main.py --model path_to_your_model.xml --verbose
+
+  python ./main.py --model path_to_your_model.xml --verbose
 
 For example:
-* python ./main.py --model ./MODEL1111190000.xml --verbose
+
+  python ./main.py --model ./MODEL1111190000.xml --verbose
 
 The script will produce two SBML files, containing the generalized model:
+
 * path_to_your_model_generalized.xml -- SBML containing the generalized model
 * path_to_your_model_with_groups.xml -- SBML file with groups extension containing the initial model
   plus the groups representing similar metabolites and similar reactions.
