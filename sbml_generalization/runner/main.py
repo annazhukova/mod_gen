@@ -12,7 +12,7 @@ import openpyxl.styles
 from openpyxl.styles import Style, Font
 from openpyxl.styles.colors import Color
 
-from mod_sbml.annotation.chebi.chebi_annotator import get_term
+from mod_sbml.annotation.chebi.chebi_annotator import get_chebi_term_by_annotation
 from mod_sbml.sbml.sbml_manager import get_gene_association
 from sbml_generalization.merge.model_merger import merge_models
 from sbml_generalization.generalization.sbml_generalizer import generalize_model
@@ -89,7 +89,7 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
         add_values(ws, row, 1, [g_id, group.getName(), ch_term.get_id() if ch_term else ''])
         for s_id in sorted(s_ids, key=lambda s_id: s_id[s_id.find('__'):]):
             species = model.getSpecies(s_id)
-            ch_term = get_term(species, chebi)
+            ch_term = get_chebi_term_by_annotation(species, chebi)
             add_values(ws, row, 4, [s_id, species.getName(), model.getCompartment(species.getCompartment()).getName(),
                                     ch_term.get_id() if ch_term else ''])
             row += 1
@@ -101,7 +101,7 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
     unm_l = 0
     for species in sorted(model.getListOfSpecies(), key=lambda s: s.getId()[s.getId().find('__'):]):
         if species.getId() not in processed_s_ids:
-            ch_term = get_term(species, chebi)
+            ch_term = get_chebi_term_by_annotation(species, chebi)
             add_values(ws, row, 1, [species.getId(), species.getName(),
                                     model.getCompartment(species.getCompartment()).getName(),
                                     ch_term.get_id() if ch_term else ''])

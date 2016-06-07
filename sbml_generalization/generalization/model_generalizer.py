@@ -237,8 +237,8 @@ def generalize_species(model, s_id2chebi_id, ub_s_ids, onto, ub_chebi_ids, thres
     else:
         s_id2clu = {}
     if not ub_s_ids:
-        frequent_ch_ids = get_frequent_term_ids(model, s_id2chebi_id, threshold)
-        ub_s_ids = select_metabolite_ids_by_term_ids(model, frequent_ch_ids, s_id2chebi_id) - set(s_id2clu.iterkeys())
+        frequent_ch_ids = get_frequent_term_ids(model, threshold)
+        ub_s_ids = select_metabolite_ids_by_term_ids(model, frequent_ch_ids) - set(s_id2clu.iterkeys())
     # unmapped_s_ids = {s_id for s_id in unmapped_s_ids if s_id not in s_id2clu}
     # infer_clusters(model, unmapped_s_ids, s_id2clu, species_id2chebi_id, ub_chebi_ids)
     return s_id2clu, ub_s_ids

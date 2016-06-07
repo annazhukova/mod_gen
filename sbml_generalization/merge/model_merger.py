@@ -1,13 +1,13 @@
 import logging
 
 import libsbml
+from mod_sbml.annotation.chebi.chebi_annotator import annotate_metabolites
 
-from mod_sbml.annotation.chebi.chebi_annotator import get_species_to_chebi
+from mod_sbml.annotation.gene_ontology.go_annotator import get_go_id, annotate_compartments
 from mod_sbml.annotation.gene_ontology.go_serializer import get_go
 from mod_sbml.sbml.compartment.compartment_manager import need_boundary_compartment, \
     separate_boundary_species
 from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation
-from mod_sbml.sbml.compartment.compartment_positioner import get_comp2go
 from mod_sbml.onto import parse_simple
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
 from sbml_generalization.sbml.sbml_helper import set_consistency_level
@@ -22,15 +22,14 @@ CYTOSOL = 'go:0005829'
 
 def update_model_element_ids(m_id, model, go2c_id, go, chebi):
     id2id = {}
-    s_id2chebi = get_species_to_chebi(model, chebi)
     if need_boundary_compartment(model):
-        separate_boundary_species(model, s_id2chebi)
-
-    comp2go_term = get_comp2go(model, go)
+        separate_boundary_species(model)
+    annotate_metabolites(model, chebi)
+    annotate_compartments(model, go)
 
     for c in model.getListOfCompartments():
         c_id = c.getId()
-        go_id = comp2go_term[c_id] if c_id in comp2go_term else None
+        go_id = get_go_id(c)
         if not go_id:
             go_id = c.getName()
         if go_id:
@@ -94,9 +93,6 @@ def copy_reaction(e, model):
     new_e.setCompartment(e.getCompartment())
     new_e.setReversible(e.getReversible())
     new_e.setKineticLaw(e.getKineticLaw())
-    for qualifier in [libsbml.BQB_IS, libsbml.BQB_IS_VERSION_OF]:
-        for annotation in get_qualifier_values(e, qualifier):
-            add_annotation(new_e, qualifier, annotation)
     for s in e.getListOfReactants():
         sr = new_e.createReactant()
         sr.setSpecies(s.getSpecies())
@@ -119,9 +115,6 @@ def copy_species(e, model):
     new_e.setName(e.getName())
     new_e.setCompartment(e.getCompartment())
     new_e.setBoundaryCondition(e.getBoundaryCondition())
-    for qualifier in [libsbml.BQB_IS, libsbml.BQB_IS_VERSION_OF]:
-        for annotation in get_qualifier_values(e, qualifier):
-            add_annotation(new_e, qualifier, annotation)
     new_e.setNotes(e.getNotes())
     return new_e
 
@@ -131,9 +124,6 @@ def copy_compartment(e, model):
     new_e.setId(e.getId())
     new_e.setName(e.getName())
     new_e.setOutside(e.getOutside())
-    for qualifier in [libsbml.BQB_IS, libsbml.BQB_IS_VERSION_OF]:
-        for annotation in get_qualifier_values(e, qualifier):
-            add_annotation(new_e, qualifier, annotation)
     new_e.setNotes(e.getNotes())
     return new_e
 

@@ -2,28 +2,19 @@ import logging
 
 import libsbml
 
-from mod_sbml.annotation.chebi.chebi_annotator import get_term, CHEBI_PREFIX
+from mod_sbml.annotation.chebi.chebi_annotator import get_chebi_term_by_annotation, CHEBI_PREFIX
 from mod_sbml.utils.misc import invert_map
-from mod_sbml.annotation.miriam_converter import to_identifiers_org_format
-from mod_sbml.annotation.rdf_annotation_helper import add_annotation, get_qualifier_values
+from mod_sbml.annotation.rdf_annotation_helper import add_annotation, get_annotations
 from mod_sbml.sbml.sbml_manager import get_products, get_reactants, get_metabolites, generate_unique_id, create_reaction, \
     create_species
 
 GROUP_TYPE_EQUIV = "equivalent"
-
-GROUP_TYPE_CHAIN = "chain"
 
 GROUP_TYPE_UBIQUITOUS = "ubiquitous"
 
 SBO_CHEMICAL_MACROMOLECULE = "SBO:0000248"
 
 SBO_BIOCHEMICAL_REACTION = "SBO:0000176"
-
-DIMENSIONLESS_UNIT = "dimensionless"
-
-SBO_MATERIAL_ENTITY = "SBO:0000240"
-
-PATHWAY_PREFIX = "SUBSYSTEM:"
 
 
 __author__ = 'anna'
@@ -162,7 +153,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                 if out_sbml:
                     new_species = create_species(model=generalized_model, compartment_id=comp.getId(), type_id=None,
                                                  name="{0} ({1}) [{2}]".format(t_name, len(s_ids), comp.getName()))
-                    add_annotation(new_species, libsbml.BQB_IS, to_identifiers_org_format(t_id, CHEBI_PREFIX))
+                    add_annotation(new_species, libsbml.BQB_IS, t_id, CHEBI_PREFIX)
                     new_s_id = new_species.getId()
                 else:
                     s_id_increment += 1
@@ -180,7 +171,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     s_group.setName(g_name)
                     # logging.info("%s: %d" % (g_name, len(s_ids)))
                     if t_id:
-                        add_annotation(s_group, libsbml.BQB_IS, to_identifiers_org_format(t_id, CHEBI_PREFIX))
+                        add_annotation(s_group, libsbml.BQB_IS, t_id, CHEBI_PREFIX)
                     for s_id in s_ids:
                         member = s_group.createMember()
                         member.setIdRef(s_id)
@@ -249,7 +240,7 @@ def parse_group_sbml(groups_sbml, chebi):
             gr_id, gr_name = group.getId(), group.getName()
             gr_sbo = group.getSBOTermID()
             try:
-                gr_type = get_qualifier_values(group, libsbml.BQB_IS_DESCRIBED_BY).next()
+                gr_type = get_annotations(group, libsbml.BQB_IS_DESCRIBED_BY).next()
             except StopIteration:
                 continue
             if SBO_BIOCHEMICAL_REACTION == gr_sbo:
@@ -261,7 +252,7 @@ def parse_group_sbml(groups_sbml, chebi):
                     ub_sps = set(gr_members)
                 elif GROUP_TYPE_EQUIV == gr_type:
                     for s_id in gr_members:
-                        term = get_term(group, chebi)
+                        term = get_chebi_term_by_annotation(group, chebi)
                         s_id2gr_id[s_id] = gr_id, term if term else gr_name, len(gr_members)
     else:
         raise GrPlError()
@@ -275,7 +266,7 @@ def check_for_groups(groups_sbml, sbo_term, group_type):
         for group in groups_plugin.getListOfGroups():
             gr_sbo = group.getSBOTermID()
             try:
-                gr_type = get_qualifier_values(group, libsbml.BQB_IS_DESCRIBED_BY).next()
+                gr_type = get_annotations(group, libsbml.BQB_IS_DESCRIBED_BY).next()
             except StopIteration:
                 continue
             if sbo_term == gr_sbo and group_type == gr_type:
