@@ -5,13 +5,14 @@ import libsbml
 from mod_sbml.sbml.ubiquitous_manager import UBIQUITOUS_THRESHOLD, select_metabolite_ids_by_term_ids, \
     get_ubiquitous_chebi_ids
 from mod_sbml.onto import filter_ontology
+from mod_sbml.sbml.compartment.compartment_manager import separate_boundary_metabolites
+from mod_sbml.sbml.submodel_manager import get_biomass_r_ids
 from sbml_generalization.sbml.sbml_helper import save_as_comp_generalized_sbml, remove_is_a_reactions, \
     remove_unused_elements
 from sbml_generalization.generalization.model_generalizer import generalize_species, generalize_reactions
 from mod_sbml.annotation.chebi.chebi_annotator import add_equivalent_chebi_ids, \
     EQUIVALENT_RELATIONSHIPS, annotate_metabolites, get_species_id2chebi_id
 from mod_sbml.utils.misc import invert_map
-# from mod_sbml.sbml.submodel_manager import get_biomass_r_ids
 
 __author__ = 'anna'
 
@@ -30,13 +31,15 @@ def get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids):
     return ub_s_ids, ub_chebi_ids
 
 
-def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_chebi_ids=None):
+def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_chebi_ids=None, ignore_biomass=True):
     # input_model
     input_doc = libsbml.SBMLReader().readSBML(in_sbml)
     input_model = input_doc.getModel()
-    r_ids_to_ignore = None#get_biomass_r_ids(input_model)
+    r_ids_to_ignore = get_biomass_r_ids(input_model) if ignore_biomass else None
 
     remove_is_a_reactions(input_model)
+    annotate_metabolites(input_model, onto)
+    separate_boundary_metabolites(input_model)
     remove_unused_elements(input_model)
     annotate_metabolites(input_model, onto)
 

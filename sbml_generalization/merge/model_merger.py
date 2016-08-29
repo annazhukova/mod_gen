@@ -6,7 +6,7 @@ from mod_sbml.annotation.chebi.chebi_annotator import annotate_metabolites
 from mod_sbml.annotation.gene_ontology.go_annotator import get_go_id, annotate_compartments
 from mod_sbml.annotation.gene_ontology.go_serializer import get_go
 from mod_sbml.sbml.compartment.compartment_manager import need_boundary_compartment, \
-    separate_boundary_species
+    separate_boundary_metabolites
 from mod_sbml.annotation.rdf_annotation_helper import get_qualifier_values, add_annotation
 from mod_sbml.onto import parse_simple
 from mod_sbml.annotation.chebi.chebi_serializer import get_chebi
@@ -23,7 +23,7 @@ CYTOSOL = 'go:0005829'
 def update_model_element_ids(m_id, model, go2c_id, go, chebi):
     id2id = {}
     if need_boundary_compartment(model):
-        separate_boundary_species(model)
+        separate_boundary_metabolites(model)
     annotate_metabolites(model, chebi)
     annotate_compartments(model, go)
 
