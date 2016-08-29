@@ -40,6 +40,12 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_che
     remove_is_a_reactions(input_model)
     annotate_metabolites(input_model, onto)
     separate_boundary_metabolites(input_model)
+    # Let us remove the modifiers since we do not know how to visualise them anyway
+    # TODO: convert them into an annotation
+    for r in input_model.getListOfReactions():
+        for m in [s.getSpecies() for s in r.getListOfModifiers()]:
+            r.removeModifier(m)
+
     remove_unused_elements(input_model)
     annotate_metabolites(input_model, onto)
 
@@ -47,7 +53,7 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_che
     s_id2chebi_id = get_species_id2chebi_id(input_model)
     ub_s_ids, ub_chebi_ids = get_ub_elements(input_model, onto, s_id2chebi_id, ub_chebi_ids, ub_s_ids)
 
-    terms = (onto.get_term(t_id) for t_id in s_id2chebi_id.itervalues())
+    terms = (t for t in (onto.get_term(t_id) for t_id in s_id2chebi_id.itervalues()) if t)
     old_onto_len = len(onto)
     filter_ontology(onto, terms, relationships=EQUIVALENT_RELATIONSHIPS, min_deepness=3)
     logging.info('Filtered the ontology from %d terms to %d' % (old_onto_len, len(onto)))
