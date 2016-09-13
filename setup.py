@@ -1,7 +1,8 @@
-__author__ = 'anna'
-
+import os
 from setuptools import setup, find_packages
 from sys import version
+
+__author__ = 'anna'
 
 if version < '2.2.3':
     from distutils.dist import DistributionMetadata
@@ -17,7 +18,7 @@ setup(name='SBML Model Generalization',
       author_email='zhutchok@gmail.com',
       url='https://github.com/annazhukova/mod_gen',
       version='1.0',
-      packages=find_packages(exclude=['sbml_generalization/runner/']),
+      packages=find_packages(exclude=[os.path.join('sbml_generalization', 'runner')]),
       include_package_data=True,
       platform=['MacOS', 'Linux', 'Windows'],
       classifiers=[
