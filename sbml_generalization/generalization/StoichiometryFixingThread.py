@@ -132,7 +132,7 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
                                 proposal[s.getId()] = term
                 if proposal:
                     for s_id, clu in proposal.iteritems():
-                        term_id2clu[s_id] = clu
+                        term_id2clu[s_id] = (clu, ) if not (isinstance(clu, tuple)) else clu
                         unmapped_s_ids -= {s_id}
 
 

@@ -67,7 +67,7 @@ def cover_t_ids(model, species_id2term_id, ubiquitous_chebi_ids, t_ids, onto, cl
                    r_ids_to_ignore=r_ids_to_ignore)
     for s_id in unmapped_s_ids:
         if s_id in s_id2clu:
-            term_id2clu[s_id] = s_id2clu[s_id][1]
+            term_id2clu[s_id] = (s_id2clu[s_id][1], )
     return term_id2clu
 
 
