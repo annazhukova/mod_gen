@@ -39,7 +39,8 @@ def generalize_model(groups_sbml, out_sbml, in_sbml, onto, ub_s_ids=None, ub_che
 
     remove_is_a_reactions(input_model)
     annotate_metabolites(input_model, onto)
-    separate_boundary_metabolites(input_model)
+    # TODO: fix comp separation
+    # separate_boundary_metabolites(input_model)
     remove_unused_elements(input_model)
     annotate_metabolites(input_model, onto)
 
