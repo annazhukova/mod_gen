@@ -61,7 +61,7 @@ class MaximizingThread(threading.Thread):
                 neighbours2term_ids[key].add(t_id)
             else:
                 neighbourless_terms.add(t_id)
-        new_lst = merge_based_on_neighbours(neighbours2term_ids.iteritems())
+        new_lst = merge_based_on_neighbours(neighbours2term_ids.items())
         i = 0
         if len(new_lst) > 1:
             for neighbours, term_ids in new_lst:

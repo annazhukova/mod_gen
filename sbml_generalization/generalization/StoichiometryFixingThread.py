@@ -1,8 +1,9 @@
 from collections import defaultdict, Counter
+from functools import reduce
 from itertools import chain
 import threading
 
-from sbml_generalization.generalization.vertical_key import get_vk2r_ids, vk2s_vk, get_vertical_key, get_r_compartments
+from sbml_generalization.generalization.vertical_key import get_vk2r_ids, vertical_key2simplified_vertical_key, get_vertical_key, get_r_compartments
 from mod_sbml.utils.misc import invert_map
 from mod_sbml.sbml.sbml_manager import get_metabolites
 
@@ -12,12 +13,20 @@ st_fix_lock = threading.RLock()
 
 
 def compute_s_id2clu(unmapped_s_ids, model, species_id2term_id, term_id2clu):
+    """
+    Creates a metabolite clustering based on a term clustering.
+    :param unmapped_s_ids: set of ids of metabolites for which no ChEBI term was found
+    :param model: libsbml.Model model of interest
+    :param species_id2term_id: dict {metabolite_id: ChEBI_term_id}
+    :param term_id2clu: dict {ChEBI_term_id: cluster}
+    :return: dict {metabolite_id: (compartment_id, cluster)}
+    """
     s_id2clu = {}
-    for s_id, t_id in species_id2term_id.iteritems():
+    for s_id, t_id in species_id2term_id.items():
         if t_id in term_id2clu:
             s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), term_id2clu[t_id])
         else:
-            s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), t_id)
+            s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), (t_id, ))
     for s_id in unmapped_s_ids:
         if s_id in term_id2clu:
             s_id2clu[s_id] = (model.getSpecies(s_id).getCompartment(), term_id2clu[s_id])
@@ -43,7 +52,7 @@ def get_most_problematic_term(t_set, conflicts):
         common = t_set & c_ts
         if len(common) > 1:
             result.update({t: 1 for t in common})
-    return max(result.iterkeys(), key=lambda t: result[t])
+    return max(result.keys(), key=lambda t: result[t])
 
 
 def get_conflict_num(t_set, conflicts):
@@ -56,17 +65,19 @@ def get_conflict_num(t_set, conflicts):
 
 
 def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
+    # TODO: double check it
+    return
     if not unmapped_s_ids:
         return
     s_id2clu = compute_s_id2clu(set(), model, s_id2term_id, term_id2clu)
     term_id2s_ids = invert_map(s_id2term_id)
     vk2r_ids = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=r_ids_to_ignore)
-    vk2r_ids = {vk: r_ids for (vk, r_ids) in vk2r_ids.iteritems() if len(r_ids) > 1}
-    processed_r_ids = reduce(lambda s1, s2: s1 | s2, vk2r_ids.itervalues(), set())
+    vk2r_ids = {vk: r_ids for (vk, r_ids) in vk2r_ids.items() if len(r_ids) > 1}
+    processed_r_ids = reduce(lambda s1, s2: s1 | s2, vk2r_ids.values(), set())
 
     s_vk2vk = defaultdict(set)
-    for vk in vk2r_ids.iterkeys():
-        s_vk2vk[vk2s_vk(vk)].add(vk)
+    for vk in vk2r_ids.keys():
+        s_vk2vk[vertical_key2simplified_vertical_key(vk)].add(vk)
 
     s_id2r_ids = defaultdict(list)
     for r in (r for r in model.getListOfReactions() if r.getNumReactants() + r.getNumProducts() > 2):
@@ -89,7 +100,7 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
                                  {(s_id, c_id) for (s_id, c_id) in ps if s_id not in unmapped_s_ids}
         if vk in vk2r_ids or len(ub_rs) + len(ub_ps) + len(partial_rs) + len(partial_ps) < 2:
             continue
-        s_vk = vk2s_vk(vk)
+        s_vk = vertical_key2simplified_vertical_key(vk)
         if s_vk in s_vk2vk:
             ub_rs, ub_ps = tuple(sorted(ub_rs)), tuple(sorted(ub_ps))
             for (vk_ub_rs, vk_ub_ps, vk_rs, vk_ps) in s_vk2vk[s_vk]:
@@ -131,23 +142,24 @@ def suggest_clusters(model, unmapped_s_ids, term_id2clu, s_id2term_id, ubiquitou
                             for s in candidate_sps:
                                 proposal[s.getId()] = term
                 if proposal:
-                    for s_id, clu in proposal.iteritems():
+                    for s_id, clu in proposal.items():
                         term_id2clu[s_id] = (clu, ) if not (isinstance(clu, tuple)) else clu
                         unmapped_s_ids -= {s_id}
 
 
 def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=None):
+    # TODO: double check it
+    return
     if not unmapped_s_ids:
         return
     term_id2s_ids = invert_map(s_id2term_id)
     clu2s_ids = invert_map(s_id2clu)
     vk2r_ids = get_vk2r_ids(model, s_id2clu, s_id2term_id, ubiquitous_chebi_ids, r_ids_to_ignore=r_ids_to_ignore)
-    vk2r_ids = {vk: r_ids for (vk, r_ids) in vk2r_ids.iteritems() if len(r_ids) > 1}
-    processed_r_ids = reduce(lambda s1, s2: s1 | s2, vk2r_ids.itervalues(), set())
+    vk2r_ids = {vk: r_ids for (vk, r_ids) in vk2r_ids.items() if len(r_ids) > 1}
 
-    s_vk2vk = defaultdict(set)
-    for vk in vk2r_ids.iterkeys():
-        s_vk2vk[vk2s_vk(vk)].add(vk)
+    simplified_vk2vk_set = defaultdict(set)
+    for vk in vk2r_ids.keys():
+        simplified_vk2vk_set[vertical_key2simplified_vertical_key(vk)].add(vk)
 
     s_id2r_ids = defaultdict(list)
     for r in (r for r in model.getListOfReactions() if r.getNumReactants() + r.getNumProducts() > 2):
@@ -169,6 +181,8 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
                     return True
         return False
 
+    processed_r_ids = reduce(lambda s1, s2: s1 | s2, vk2r_ids.values(), set())
+
     for r in model.getListOfReactions():
         if r.getId() in processed_r_ids or not unmapped_s_ids & get_metabolites(r):
             continue
@@ -179,12 +193,12 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
         rs, ps = set(rs), set(ps)
         partial_rs, partial_ps = {(s_id, c_id) for (s_id, c_id) in rs if s_id not in unmapped_s_ids}, \
                                  {(s_id, c_id) for (s_id, c_id) in ps if s_id not in unmapped_s_ids}
-        if vk in vk2r_ids or len(ub_rs) + len(ub_ps) + len(partial_rs) + len(partial_ps) < 2:
+        if len(ub_rs) + len(ub_ps) + len(partial_rs) + len(partial_ps) < 2:
             continue
-        s_vk = vk2s_vk(vk)
-        if s_vk in s_vk2vk:
+        simplified_vk = vertical_key2simplified_vertical_key(vk)
+        if simplified_vk in simplified_vk2vk_set:
             ub_rs, ub_ps = tuple(sorted(ub_rs)), tuple(sorted(ub_ps))
-            for (vk_ub_rs, vk_ub_ps, vk_rs, vk_ps) in s_vk2vk[s_vk]:
+            for (vk_ub_rs, vk_ub_ps, vk_rs, vk_ps) in simplified_vk2vk_set[simplified_vk]:
                 vk_rs, vk_ps = {(s_id if s_id not in s_id2clu else s_id2clu[s_id], c_id) for (s_id, c_id) in vk_rs}, \
                                {(s_id if s_id not in s_id2clu else s_id2clu[s_id], c_id) for (s_id, c_id) in vk_ps}
                 proposal = {}
@@ -230,9 +244,9 @@ def infer_clusters(model, unmapped_s_ids, s_id2clu, s_id2term_id, ubiquitous_che
                                 continue
                 if proposal:
                     s_id2clu.update(proposal)
-                    for s_id, clu in proposal.iteritems():
+                    for s_id, clu in proposal.items():
                         clu2s_ids[clu].add(s_id)
-                    unmapped_s_ids -= set(proposal.iterkeys())
+                    unmapped_s_ids -= set(proposal.keys())
 
 
 class StoichiometryFixingThread(threading.Thread):

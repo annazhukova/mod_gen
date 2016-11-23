@@ -45,7 +45,7 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
     add_values(ws, row, 1, ["Group Id", "Group Name", "Group CHEBI", "Id", "Name", "Compartment", "CHEBI"], HEADER_STYLE)
     row += 1
     processed_s_ids = set()
-    for (g_id, ch_term), s_ids in sorted(clu2s_ids.iteritems(), key=lambda ((g_id, _), s_ids): g_id):
+    for (g_id, ch_term), s_ids in sorted(clu2s_ids.items(), key=lambda ((g_id, _), s_ids): g_id):
         group = groups_plugin.getGroup(g_id)
         add_values(ws, row, 1, [g_id, group.getName(), ch_term.get_id() if ch_term else ''])
         for s_id in sorted(s_ids, key=lambda s_id: s_id[s_id.find('__'):]):
@@ -75,7 +75,7 @@ def serialize_generalization(r_id2clu, s_id2clu, sbml, chebi, path):
     add_values(ws, row, 1, ["Group Id", "Id", "Name", "Formula", "Gene Association"], HEADER_STYLE)
     row += 1
     processed_r_ids = set()
-    for (g_id, g_name), r_ids in sorted(clu2r_ids.iteritems(), key=lambda ((g_id, g_name), _): g_id):
+    for (g_id, g_name), r_ids in sorted(clu2r_ids.items(), key=lambda ((g_id, g_name), _): g_id):
         add_values(ws, row, 1, [g_id])
         for r_id in sorted(r_ids, key=lambda r_id: r_id[r_id.find('__'):]):
             r = model.getReaction(r_id)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         sbml = params.merged_model
     else:
         sbml = params.model
-    r_id2clu, s_id2clu, _, _ = generalize_model(params.groups_model, params.output_model, sbml, ontology,
+    r_id2clu, s_id2clu, _, _ = generalize_model(sbml, ontology, params.groups_model, params.output_model,
                                                 ub_chebi_ids={'chebi:ch'})
     if os.path.isdir(params.model):
         serialize_generalization(r_id2clu, s_id2clu, params.groups_model, ontology,

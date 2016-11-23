@@ -35,30 +35,48 @@ def copy_elements(input_model, output_model):
         output_model.addSpecies(species)
 
 
-def remove_unused_elements(output_model):
-    species_to_keep = []
-    for reaction in output_model.getListOfReactions():
-        species_to_keep.extend(get_metabolites(reaction, include_modifiers=True))
-    sp_list = list(output_model.getListOfSpecies())
+def remove_unused_elements(model, include_modifiers=True):
+    """
+    Removes unused element from the model, i.e. compartments that contain no metabolites,
+    and metabolites that do not participate in any reaction.
+    :param include_modifiers: whether to keep reaction modifiers.
+    :param model: libsbml.Model model of interest
+    :return: void, input model is modified inplace
+    """
+    species_to_keep = get_used_species(model, include_modifiers)
+    sp_list = list(model.getListOfSpecies())
     for species in sp_list:
         species_id = species.getId()
         if not (species_id in species_to_keep):
-            output_model.removeSpecies(species_id)
+            model.removeSpecies(species_id)
     compartments_to_keep = set()
-    for species in output_model.getListOfSpecies():
+    for species in model.getListOfSpecies():
         compartment_id = species.getCompartment()
         compartments_to_keep.add(compartment_id)
-        comp = output_model.getCompartment(compartment_id)
+        comp = model.getCompartment(compartment_id)
         if comp:
             outer_compartment = comp.getOutside()
             while outer_compartment:
                 compartments_to_keep.add(outer_compartment)
-                outer_compartment = output_model.getCompartment(outer_compartment).getOutside()
-    c_list = list(output_model.getListOfCompartments())
+                outer_compartment = model.getCompartment(outer_compartment).getOutside()
+    c_list = list(model.getListOfCompartments())
     for compartment in c_list:
         compartment_id = compartment.getId()
         if not (compartment_id in compartments_to_keep):
-            output_model.removeCompartment(compartment_id)
+            model.removeCompartment(compartment_id)
+
+
+def get_used_species(model, include_modifiers=True):
+    """
+    Returns a list of species participating in any of the model reactions.
+    :param include_modifiers: whether to include reaction modifiers
+    :param model: libsbml.Model model of interest
+    :return: set of used species ids
+    """
+    species_to_keep = set()
+    for reaction in model.getListOfReactions():
+        species_to_keep |= get_metabolites(reaction, include_modifiers=include_modifiers)
+    return species_to_keep
 
 
 def normalize(t):
@@ -76,16 +94,22 @@ def flatten(t):
         return flatten(t[0]) + flatten(t[1:])
 
 
-def remove_is_a_reactions(input_model):
+def remove_is_a_reactions(model):
+    """
+    Removes 'isa' reactions from the model. 'isa' reactions can be found in yeast.net models and contain
+    purely hierarchical information, e.g. 'lauroyl-CoA isa fatty-acyl-CoA'.
+    :param model: libsbml.Model model of interest
+    :return: void (input model is modified inplace)
+    """
     to_remove = []
-    for reaction in input_model.getListOfReactions():
+    for reaction in model.getListOfReactions():
         if 1 == reaction.getNumReactants() == reaction.getNumProducts() \
                 and reaction.getName().find("isa ") != -1 \
-                and input_model.getCompartment(reaction.getListOfReactants().get(0).getSpecies()) == \
-                        input_model.getCompartment(reaction.getListOfReactants().get(0).getSpecies()):
+                and model.getCompartment(reaction.getListOfReactants().get(0).getSpecies()) == \
+                        model.getCompartment(reaction.getListOfReactants().get(0).getSpecies()):
             to_remove.append(reaction.getId())
     for r_id in to_remove:
-        input_model.removeReaction(r_id)
+        model.removeReaction(r_id)
 
 
 def set_consistency_level(doc):
@@ -142,7 +166,7 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
     else:
         clu2r_ids = invert_map(r_id2clu)
         logging.info("  creating species groups")
-        for ((c_id, t), s_ids) in clu2s_ids.iteritems():
+        for ((c_id, t), s_ids) in clu2s_ids.items():
             comp = input_model.getCompartment(c_id)
             if len(s_ids) > 1:
                 t = onto.get_term(t)
@@ -178,20 +202,20 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                     add_annotation(s_group, libsbml.BQB_IS_DESCRIBED_BY, GROUP_TYPE_EQUIV)
 
         generalize_species = lambda species_id: s_id2gr_id[species_id][0] if (species_id in s_id2gr_id) else species_id
-        s_id_to_generalize = set(s_id2gr_id.iterkeys())
+        s_id_to_generalize = set(s_id2gr_id.keys())
         logging.info("  creating reaction groups")
-        for clu, r_ids in clu2r_ids.iteritems():
+        for clu, r_ids in clu2r_ids.items():
             representative = input_model.getReaction(list(r_ids)[0])
             r_name = "generalized %s" % representative.getName()
             if out_sbml:
                 reactants = dict(get_reactants(representative, stoichiometry=True))
                 products = dict(get_products(representative, stoichiometry=True))
                 if (len(r_ids) == 1) and \
-                        not ((set(reactants.iterkeys()) | set(products.iterkeys())) & s_id_to_generalize):
+                        not ((set(reactants.keys()) | set(products.keys())) & s_id_to_generalize):
                     generalized_model.addReaction(representative)
                     continue
-                r_id2st = {generalize_species(it): st for (it, st) in reactants.iteritems()}
-                p_id2st = {generalize_species(it): st for (it, st) in products.iteritems()}
+                r_id2st = {generalize_species(it): st for (it, st) in reactants.items()}
+                p_id2st = {generalize_species(it): st for (it, st) in products.items()}
                 reversible = next((False for r_id in r_ids if not input_model.getReaction(r_id).getReversible()), True)
                 new_r_id = create_reaction(generalized_model, r_id2st, p_id2st, name=r_name, reversible=reversible,
                                            id_=representative.getId() if len(r_ids) == 1 else None).getId()
@@ -239,9 +263,8 @@ def parse_group_sbml(groups_sbml, chebi):
             gr_members = [it.getIdRef() for it in group.getListOfMembers()]
             gr_id, gr_name = group.getId(), group.getName()
             gr_sbo = group.getSBOTermID()
-            try:
-                gr_type = get_annotations(group, libsbml.BQB_IS_DESCRIBED_BY).next()
-            except StopIteration:
+            gr_type = next(get_annotations(group, libsbml.BQB_IS_DESCRIBED_BY), None)
+            if not gr_type:
                 continue
             if SBO_BIOCHEMICAL_REACTION == gr_sbo:
                 if GROUP_TYPE_EQUIV == gr_type:
@@ -265,10 +288,7 @@ def check_for_groups(groups_sbml, sbo_term, group_type):
     if groups_plugin:
         for group in groups_plugin.getListOfGroups():
             gr_sbo = group.getSBOTermID()
-            try:
-                gr_type = get_annotations(group, libsbml.BQB_IS_DESCRIBED_BY).next()
-            except StopIteration:
-                continue
+            gr_type = next(get_annotations(group, libsbml.BQB_IS_DESCRIBED_BY), None)
             if sbo_term == gr_sbo and group_type == gr_type:
                 return True
     return False
