@@ -170,7 +170,8 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
             comp = input_model.getCompartment(c_id)
             if len(s_ids) > 1:
                 t = onto.get_term(t)
-                t_name, t_id = (t.get_name(), t.get_id()) if t else (' or '.join(input_model.getSpecies(s_id).getName() for s_id in s_ids), None)
+                t_name, t_id = (t.get_name(), t.get_id()) if t \
+                    else (' or '.join(input_model.getSpecies(s_id).getName() for s_id in s_ids), None)
                 if not t_id:
                     t = t_name
 
