@@ -20,19 +20,55 @@ SBO_BIOCHEMICAL_REACTION = "SBO:0000176"
 __author__ = 'anna'
 
 
-def copy_elements(input_model, output_model):
-    output_model.setId(input_model.getId())
-    output_model.setNamespaces(input_model.getNamespaces())
-    for unit in input_model.getListOfUnitDefinitions():
-        output_model.addUnitDefinition(unit)
-    for parameter in input_model.getListOfParameters():
-        output_model.addParameter(parameter)
-    for compartment in input_model.getListOfCompartments():
-        output_model.addCompartment(compartment)
-    for speciesType in input_model.getListOfSpeciesTypes():
-        output_model.addSpeciesType(speciesType)
-    for species in input_model.getListOfSpecies():
-        output_model.addSpecies(species)
+def check(value, message):
+    """
+    If 'value' is None, logs an error message constructed using 'message'.
+    If 'value' is an integer, it assumes it is a libSBML return status code.
+    If the code value is LIBSBML_OPERATION_SUCCESS, returns without further action;
+    if it is not, logs an error message constructed using 'message' along with text from
+    libSBML explaining the meaning of the code.
+    """
+    if value is None:
+        logging.error('LibSBML returned a null value trying to %s.' % message)
+    elif type(value) is int and value != libsbml.LIBSBML_OPERATION_SUCCESS:
+        logging.error('Error encountered trying to %s. LibSBML returned error code %s: "%s".'
+                      % (message, value, libsbml.OperationReturnValue_toString(value).strip()))
+
+
+def create_model():
+    """Returns a document with an empty SBML Level 3 model."""
+
+    try:
+        document = libsbml.SBMLDocument(3, 1)
+    except ValueError:
+        raise SystemExit('Could not create SBMLDocument object')
+
+    # Create the basic Model object inside the SBMLDocument object.  To
+    # produce a model with complete units for the reaction rates, we need
+    # to set the 'timeUnits' and 'extentUnits' attributes on Model.  We
+    # set 'substanceUnits' too, for good measure, though it's not strictly
+    # necessary here because we also set the units for invididual species
+    # in their definitions.
+    model = document.createModel()
+    check(model, 'create model')
+    check(model.setTimeUnits("second"), 'set model-wide time units')
+    check(model.setExtentUnits("mole"), 'set model units of extent')
+    check(model.setSubstanceUnits('mole'), 'set model substance units')
+
+    # Create a unit definition we will need later.  Note that SBML Unit
+    # objects must have all four attributes 'kind', 'exponent', 'scale'
+    # and 'multiplier' defined.
+    per_second = model.createUnitDefinition()
+    check(per_second, 'create unit definition')
+    check(per_second.setId('per_second'), 'set unit definition id')
+    unit = per_second.createUnit()
+    check(unit, 'create unit on per_second')
+    check(unit.setKind(libsbml.UNIT_KIND_SECOND), 'set unit kind')
+    check(unit.setExponent(-1), 'set unit exponent')
+    check(unit.setScale(0), 'set unit scale')
+    check(unit.setMultiplier(1), 'set unit multiplier')
+
+    return document
 
 
 def remove_unused_elements(model, include_modifiers=True):
@@ -156,9 +192,10 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
             add_annotation(s_group, libsbml.BQB_IS_DESCRIBED_BY, GROUP_TYPE_UBIQUITOUS)
     if out_sbml:
         # generalized model
-        generalized_doc = libsbml.SBMLDocument(input_model.getSBMLNamespaces())
-        generalized_model = generalized_doc.createModel()
-        copy_elements(input_model, generalized_model)
+        generalized_doc = convert_to_lev3_v1(input_model)
+        generalized_model = generalized_doc.getModel()
+        for _ in range(0, generalized_model.getNumReactions()):
+            generalized_model.removeReaction(0)
 
     r_id2g_eq, s_id2gr_id = {}, {}
     if not clu2s_ids:
@@ -213,7 +250,8 @@ def save_as_comp_generalized_sbml(input_model, out_sbml, groups_sbml, r_id2clu, 
                 products = dict(get_products(representative, stoichiometry=True))
                 if (len(r_ids) == 1) and \
                         not ((set(reactants.keys()) | set(products.keys())) & s_id_to_generalize):
-                    generalized_model.addReaction(representative)
+                    create_reaction(generalized_model, reactants, products, name=representative.getName(),
+                                    reversible=representative.getReversible(), id_=representative.getId())
                     continue
                 r_id2st = {generalize_species(it): st for (it, st) in reactants.items()}
                 p_id2st = {generalize_species(it): st for (it, st) in products.items()}
