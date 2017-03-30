@@ -11,7 +11,7 @@ containing the initial model plus the groups representing similar metabolites an
 ## Article
 
 Zhukova A, Sherman DJ. **Knowledge-based generalization of metabolic models.**
-*J Comput Biol.* 2014 Jul; **21**(7):534-47 [doi:10.1089/cmb.2013.0143](http://identifiers.org/doi/10.1089/cmb.2013.0143).
+*J Comput Biol.* 2014 Jul; **21**(7):534-47 [doi:10.1089/cmb.2013.0143](http://identifiers.org/doi/10.1089/cmb.2013.0143)
 
 
 ## Model Generalization Method
@@ -56,18 +56,17 @@ if in the network there is no reaction whose stoichiometry would be changed by s
 ## Installation
 
 From the directory where you have extracted this archive, execute:
-* python setup.py
-
+```bash
+python setup.py
+```
 
 ## Running Model Generalization
 
 Execute:
 
-  python ./main.py --model path_to_your_model.xml --verbose
-
-For example:
-
-  python ./main.py --model ./MODEL1111190000.xml --verbose
+```bash
+python3 ./sbml_generalization/runner/main.py --model path_to_your_model.xml --verbose
+```
 
 The script will produce two SBML files, containing the generalized model:
 

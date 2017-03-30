@@ -1,34 +1,28 @@
 import os
-from setuptools import setup, find_packages
-from sys import version
+from distutils.core import setup
 
-__author__ = 'anna'
-
-if version < '2.2.3':
-    from distutils.dist import DistributionMetadata
-
-    DistributionMetadata.classifiers = None
-    DistributionMetadata.download_url = None
-
-
-setup(name='SBML Model Generalization',
-      description='Knowledge-based generalization for metabolic models in SBML format.',
-      long_description=open('README.md').read(),
-      author='Anna Zhukova',
-      author_email='zhutchok@gmail.com',
-      url='https://github.com/annazhukova/mod_gen',
-      version='1.0',
-      packages=find_packages(exclude=[os.path.join('sbml_generalization', 'runner')]),
-      include_package_data=True,
-      platform=['MacOS', 'Linux', 'Windows'],
-      classifiers=[
-          'Development Status :: 4 - Beta',
-          'Environment :: Console',
-          'Intended Audience :: Developers',
-          'License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)',
-          'Topic :: Scientific/Engineering :: Bio-Informatics',
-          'Topic :: Software Development :: Libraries :: Python Modules',
-      ],
-      download_url='https://github.com/annazhukova/mod_gen',
-      requires=['python-libsbml-experimental', 'mod_sbml']
-      )
+setup(
+    name='sbml_generalization',
+    description='Knowledge-based generalization for metabolic models in SBML format.',
+    long_description=open('README.md').read(),
+    author='Anna Zhukova',
+    author_email='zhutchok@gmail.com',
+    url='https://github.com/annazhukova/mod_gen',
+    version='0.1',
+    packages=['sbml_generalization'],
+    platform=['MacOS', 'Linux', 'Windows'],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ],
+    package_data={'sbml_generalization': [os.path.join('generalization', '*.py'),
+                                          os.path.join('merge', '*.py'),
+                                          os.path.join('runner', '*.py'),
+                                          os.path.join('sbml', '*.py')]},
+    include_package_data=True,
+    download_url='https://github.com/annazhukova/mod_gen/archive/0.1.zip',
+    install_requires=['python-libsbml-experimental', 'mod_sbml']
+)
