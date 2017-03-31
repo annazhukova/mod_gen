@@ -8,7 +8,7 @@ setup(
     author='Anna Zhukova',
     author_email='zhutchok@gmail.com',
     url='https://github.com/annazhukova/mod_gen',
-    version='0.1',
+    version='0.1.1',
     packages=['sbml_generalization'],
     platform=['MacOS', 'Linux', 'Windows'],
     classifiers=[
@@ -21,8 +21,9 @@ setup(
     package_data={'sbml_generalization': [os.path.join('generalization', '*.py'),
                                           os.path.join('merge', '*.py'),
                                           os.path.join('runner', '*.py'),
-                                          os.path.join('sbml', '*.py')]},
+                                          os.path.join('sbml', '*.py'),
+                                          os.path.join('..', 'README.md')]},
     include_package_data=True,
-    download_url='https://github.com/annazhukova/mod_gen/archive/0.1.zip',
+    download_url='https://github.com/annazhukova/mod_gen/archive/0.1.1.zip',
     install_requires=['python-libsbml-experimental', 'mod_sbml']
 )
